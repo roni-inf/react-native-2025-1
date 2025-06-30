@@ -1,3 +1,4 @@
+import { deleteDoc, doc } from "firebase/firestore";
 import {
   View,
   Text,
@@ -5,8 +6,10 @@ import {
   Touchable,
   TouchableOpacity,
 } from "react-native";
+import { db } from "../../firebaseConnection";
 
 interface Usuario {
+  id: string;
   nome: string;
   email: string;
   cargo: string;
@@ -14,10 +17,18 @@ interface Usuario {
 
 interface Props {
   dados: Usuario;
+  handleEdit: (dados: Usuario) => void;
 }
 
-export default function UsuariosList({ dados }: Props) {
-  console.log(dados);
+export default function UsuariosList({ dados, handleEdit }: Props) {
+  async function handleDelete() {
+    const docRef = doc(db, "usuarios", dados.id);
+    await deleteDoc(docRef);
+  }
+
+  function handleEditUser() {
+    handleEdit(dados);
+  }
 
   return (
     <View style={styles.container}>
@@ -25,9 +36,15 @@ export default function UsuariosList({ dados }: Props) {
       <Text>Email:{dados.email}</Text>
       <Text>Cargo:{dados.cargo}</Text>
 
-      <TouchableOpacity>
-        <Text>Excluir </Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.buttonExcluir} onPress={handleDelete}>
+          <Text style={styles.buttonText}>Excluir </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.buttonEdit} onPress={handleEditUser}>
+          <Text style={styles.buttonText}>Editar </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -55,6 +72,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#FFF",
+    fontWeight: "bold",
     paddingLeft: 8,
     paddingRight: 8,
   },

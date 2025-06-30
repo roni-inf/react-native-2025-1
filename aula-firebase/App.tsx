@@ -17,6 +17,7 @@ import {
   getDocs,
   onSnapshot,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import UsuariosList from "./src/components/UsuariosList";
 
@@ -32,12 +33,13 @@ export default function App() {
   const [email, setEmail] = useState<string>("");
   const [cargo, setCargo] = useState<string>("");
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [isEditing, setIsEditing] = useState("");
 
   useEffect(() => {
     function getDados() {
       // const docret = doc(db, "usuarios", "1");
       const usersRef = collection(db, "usuarios");
-      onSnapshot(usersRef,(snapshot) => {
+      onSnapshot(usersRef, (snapshot) => {
         let lista: Usuario[] = [];
         snapshot.forEach((doc) => {
           lista.push({
@@ -76,6 +78,27 @@ export default function App() {
         console.error(error);
       });
   }
+
+  function editUser(dados: Usuario) {
+    setNome(dados.nome);
+    setEmail(dados.email);
+    setCargo(dados.cargo);
+    setIsEditing(dados.id);
+  }
+
+  async function handleEditUser() {
+    const docRef = doc(db, "usuarios", isEditing);
+    await updateDoc(docRef, {
+      nome,
+      email,
+      cargo,
+    });
+    setNome("");
+    setEmail("");
+    setCargo("");
+    setIsEditing("");
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle={"default"} />
@@ -100,13 +123,22 @@ export default function App() {
         value={cargo}
         onChangeText={(texto) => setCargo(texto)}
       />
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Adicionar</Text>
-      </TouchableOpacity>
+
+      {isEditing === "" ? (
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
+          <Text style={styles.buttonText}>Adicionar</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.button} onPress={handleEditUser}>
+          <Text style={styles.buttonText}>Atualizar</Text>
+        </TouchableOpacity>
+      )}
       <FlatList
         style={styles.list}
         data={usuarios}
-        renderItem={({item}) => <UsuariosList dados={item} />}
+        renderItem={({ item }) => (
+          <UsuariosList dados={item} handleEdit={(item) => editUser(item)} />
+        )}
         keyExtractor={(item) => String(item.id)}
       />
     </View>
