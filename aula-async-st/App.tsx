@@ -6,35 +6,58 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  FlatList,
 } from "react-native";
 
 export default function App() {
-  const [input, setInput] = useState("");
-  const [nome, setNome] = useState("");
-
-  async function gravarNome() {
-    await AsyncStorage.setItem("@nome", input);
-    setNome(input);
-    setInput("");
-  }
+  const [input, setInput] = useState<string>("");
+  const [nomes, setNomes] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadData() {
-      const value = await AsyncStorage.getItem("@nome");
-      if (value !== null) {
-        setNome(value);
+      try {
+        const data = await AsyncStorage.getItem("@listaNomes");
+        if (data) {
+          setNomes(JSON.parse(data));
+        }
+      } catch (error) {
+        console.error("Erro:" + error);
       }
     }
     loadData();
   }, []);
 
+  async function adicionarNome() {
+    if (input.trim() === "") {
+      return;
+    }
+    const lista = [...nomes, input];
+    setNomes(lista);
+    setInput("");
+    try {
+      await AsyncStorage.setItem("@listaNomes", JSON.stringify(lista));
+    } catch (error) {
+      console.error("Erro" + error);
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <TextInput value={input} onChangeText={setInput} style={styles.input} />
-      <TouchableOpacity style={styles.botao} onPress={gravarNome}>
-        <Text>Gravar</Text>
+      <TextInput
+        style={styles.input}
+        onChangeText={setInput}
+        value={input}
+        placeholder="Digite um nome"
+      />
+      <TouchableOpacity onPress={adicionarNome} style={styles.botao}>
+        <Text style={styles.botaoTexto}>Adicionar</Text>
       </TouchableOpacity>
-      <Text>Nome:{nome}</Text>
+
+      <FlatList
+        data={nomes}
+        renderItem={({ item }) => <Text>{item}</Text>}
+        keyExtractor={(item, key) => key.toString()}
+      />
     </View>
   );
 }
@@ -42,22 +65,35 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 60,
     alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 20,
   },
   input: {
-    borderWidth: 2,
-    borderStyle: "solid",
-    borderColor: "gray",
-    width: "50%",
-  },
-  texto: {
-    color: "#fff",
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#aaa",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
   },
   botao: {
-    backgroundColor: "green",
-    borderRadius: 10,
+    backgroundColor: "#4CAF50",
     paddingVertical: 12,
     paddingHorizontal: 30,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  botaoTexto: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  item: {
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: "#f2f2f2",
+    width: "100%",
+    marginBottom: 5,
+    borderRadius: 6,
   },
 });

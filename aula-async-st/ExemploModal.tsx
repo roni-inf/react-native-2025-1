@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import ActionModal from "./src/components/ActionModal";
 
-export default function App() {
+export default function ExemploModal() {
   const [exibirModal, setExibirModal] = useState(false);
   return (
     <SafeAreaView style={styles.container}>
